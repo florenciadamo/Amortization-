@@ -1,0 +1,68 @@
+rm(list=ls())
+options(scipen = 999, digits = 6)
+graphics.off()
+
+#1) Creo las siguientes variables para guardar los resultados ----
+Saldo <<- numeric() #Saldo Inicial
+Int <- numeric()  #Intereses
+Amort <<- numeric() #amortizacion
+Cuota <<- numeric() #Cuotas a pagar
+
+#2) Defino variables iniciales
+C <- 750000 #Elija Capital Inicial
+i <- 0.025  #Elija Tasa
+n <- 12     #Elija cantidad de periodos
+Sistema <- "Aleman" #Entre comillas selecciones Sistema Aleman, Frances o Americano.
+
+t  <- c(0:n)
+
+#Creo la funcion que tendra como parametros el capital, la tasa y el numeros de periodos
+Sistema_Amort <- function(C, i, n, Sistema){
+  Saldo[1] <<-  C #El saldo inicial será igual a c
+  Int[1] <<- 0   #los interes en t0 serán 0
+  Int[2] <<- C*i  #los interes en t1 será la tasa por el capital
+  Amort[1] <<- 0 #la amort en t0 es cero
+  Cuota[1] <<- 0
+  
+  if(Sistema == "Aleman"){
+    #Hago bucle for
+    for (k in 1:n){
+      Amort[k+1] <<- C /n #la amortizacion será el pago menos los intereses
+      Int[k+1] <<- Saldo[k]*i #Los interes serán el saldo pendiente por la tasa
+      Cuota[k+1] <<- Amort[k+1] + Int[k+1]
+      Saldo[k+1] <<- Saldo[k]-Amort[k+1] #El saldo pend será el saldo menos lo que pague (sin interes)
+    }
+    
+    print(Tabla_Sistema_Aleman <- cbind(t,Int,Amort,Cuota,round(Saldo, digits =2)))
+  }
+  else if(Sistema == "Americano"){
+    for (k in 1:n){
+      Int[k+1] <<- Saldo[k]*i #Los interes serán el saldo pendiente por la tasa
+      Amort[k+1] <<- 0
+      Amort[37] <<- C
+      Saldo[k+1] <<- Saldo[k]-Amort[k+1] #El saldo pend será el saldo menos lo que pague (sin interes)
+      Cuota[k+1] <<- Int[k+1] + Amort[k+1]
+    }
+    
+    print(Sistema_Americano <- cbind(t,Cuota,Int,Amort,round(Saldo, digits =2)))
+    
+    
+  }
+  else{
+    R <- C*i/(1-(1+i)^(-n)) #calculo el termino constante de pago
+    #Hago bucle for
+    for (k in 1:n){
+      Int[k+1] <<- Saldo[k]*i #Los interes serán el saldo pendiente por la tasa
+      Amort[k+1] <<- R - Int[k+1] #la amortizacion será el pago menos los intereses
+      Saldo[k+1] <<- Saldo[k]-Amort[k+1] #El saldo pend será el saldo menos lo que pague (sin interes)
+    }
+    Renta <<- c(0,rep(R,n))
+    print(T_Sist_Frances <- cbind(t,Renta,Int,Amort,round(Saldo, digits =2)))
+    
+  }
+  
+}
+
+Tabla <- data.frame(Sistema_Amort(C,i,n,Sistema))
+colnames(Tabla)<-c("Periodo", "Interes", "Amortizacion", "Cuota","Capital")
+View(Tabla)
